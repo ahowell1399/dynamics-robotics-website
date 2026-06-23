@@ -12,7 +12,14 @@ body { margin: 0; background: var(--surface-page); font-family: var(--font-body)
 @keyframes drNavDrop { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes drFadeUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 
-@media (prefers-reduced-motion: reduce) { .dr-shell > header, .dr-page { animation: none; } }
+/* ---- Lightbox (Gallery full-screen viewer) entrance ---- */
+@keyframes drLightboxIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes drLightboxImg { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .dr-shell > header, .dr-page { animation: none; }
+  .dr-lightbox, .dr-lightbox__img { animation: none !important; }
+}
 
 /* ---- LocationMap: branded marker + dark-basemap control theming ---- */
 .dr-map-marker { position: relative; }

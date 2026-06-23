@@ -1,0 +1,78 @@
+.dr-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--radius-pill);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Variants */
+.dr-badge--primary {
+  background: var(--color-primary-tint);
+  color: var(--green-700);
+  --dr-badge-dot: var(--color-primary);
+}
+
+.dr-badge--neutral {
+  background: var(--surface-sunken);
+  color: var(--neutral-700);
+  --dr-badge-dot: var(--neutral-500);
+}
+
+.dr-badge--solid {
+  background: var(--color-primary);
+  color: #fff;
+  --dr-badge-dot: #fff;
+}
+
+.dr-badge--success {
+  background: var(--status-success-bg);
+  color: var(--green-700);
+  --dr-badge-dot: var(--status-success);
+}
+
+.dr-badge--warning {
+  background: var(--status-warning-bg);
+  color: #9a6210;
+  --dr-badge-dot: var(--status-warning);
+}
+
+.dr-badge--danger {
+  background: var(--status-danger-bg);
+  color: #a52b2b;
+  --dr-badge-dot: var(--status-danger);
+}
+
+.dr-badge--outline {
+  background: transparent;
+  color: var(--text-body);
+  border: 1px solid var(--border-default);
+  --dr-badge-dot: var(--neutral-400);
+}
+
+/* Sizes */
+.dr-badge--sm {
+  font-size: var(--text-2xs);
+  padding: 2px 8px;
+  gap: 5px;
+}
+
+.dr-badge--md {
+  font-size: var(--text-xs);
+  padding: 4px 10px;
+  gap: 6px;
+}
+
+/* Dot */
+.dr-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--dr-badge-dot);
+  flex-shrink: 0;
+}

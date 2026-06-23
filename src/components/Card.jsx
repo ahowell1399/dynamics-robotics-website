@@ -1,4 +1,5 @@
 import React from "react";
+import "./Card.css";
 
 /**
  * Dynamic Robotics & Integrations — Card
@@ -13,30 +14,14 @@ export function Card({
   onClick,
   ...rest
 }) {
-  const [hover, setHover] = React.useState(false);
   return (
     <div
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        position: "relative",
-        background: "var(--surface-card)",
-        border: "1px solid var(--border-subtle)",
-        borderRadius: "var(--radius-lg)",
-        padding,
-        boxShadow: interactive && hover ? "var(--shadow-lg)" : "var(--shadow-sm)",
-        transform: interactive && hover ? "translateY(-3px)" : "none",
-        transition: "box-shadow var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-standard)",
-        cursor: interactive ? "pointer" : "default",
-        overflow: "hidden",
-        ...style,
-      }}
+      className={`dr-card${interactive ? " dr-card--interactive" : ""}`}
+      style={{ "--dr-card-pad": padding, ...style }}
       {...rest}
     >
-      {accent && (
-        <span style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "var(--color-primary)" }} />
-      )}
+      {accent && <span className="dr-card__accent" />}
       {children}
     </div>
   );

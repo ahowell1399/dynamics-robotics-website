@@ -1,7 +1,7 @@
 import React from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useIsMobile } from "../hooks/useIsMobile.js";
+import "./LocationMap.css";
 import { Button } from "./Button.jsx";
 
 /**
@@ -26,7 +26,6 @@ export function LocationMap({
   address = "Springfield, MO",
   style = {},
 }) {
-  const isMobile = useIsMobile();
   const containerRef = React.useRef(null);
   const mapRef = React.useRef(null);
   // On touch devices, one-finger drag would hijack page scrolling, so the map
@@ -129,46 +128,21 @@ export function LocationMap({
   )}`;
 
   return (
-    <div
-      style={{
-        position: "relative",
-        borderRadius: "var(--radius-lg)",
-        overflow: "hidden",
-        border: "1px solid var(--border-subtle)",
-        boxShadow: "var(--shadow-md)",
-        ...style,
-      }}
-    >
+    <div className="dr-locmap" style={style}>
       <div
         ref={containerRef}
+        className="dr-locmap__canvas"
         role="application"
         aria-label={`Interactive map showing ${label} in ${address}`}
-        style={{ height: isMobile ? 320 : 440, width: "100%", background: "#0b0e0c" }}
       />
 
       {/* glass info card — z-index above Leaflet's panes (which go up to ~700) */}
-      <div
-        style={{
-          position: "absolute",
-          top: 16,
-          left: 16,
-          zIndex: 1001,
-          maxWidth: 264,
-          padding: "16px 18px",
-          borderRadius: "var(--radius-md)",
-          background: "rgba(18,20,18,0.74)",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          boxShadow: "var(--shadow-lg)",
-          color: "#fff",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 6 }}>
-          <span style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--color-primary)", boxShadow: "0 0 0 4px rgba(46,151,62,0.25)", flexShrink: 0 }} />
-          <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, lineHeight: 1.2 }}>{label}</span>
+      <div className="dr-locmap__card">
+        <div className="dr-locmap__card-row">
+          <span className="dr-locmap__dot" />
+          <span className="dr-locmap__name">{label}</span>
         </div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-2xs)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--green-400)", marginBottom: 14 }}>
+        <div className="dr-locmap__addr">
           {address}
         </div>
         <Button size="sm" iconRight={<ArrowR />} onClick={() => window.open(directionsUrl, "_blank", "noopener,noreferrer")}>
@@ -182,13 +156,7 @@ export function LocationMap({
         onClick={recenter}
         aria-label="Recenter map"
         title="Recenter"
-        style={{
-          position: "absolute", bottom: 16, left: 16, zIndex: 1001,
-          width: 40, height: 40, display: "inline-flex", alignItems: "center", justifyContent: "center",
-          background: "rgba(18,20,18,0.8)", color: "#fff",
-          border: "1px solid rgba(255,255,255,0.14)", borderRadius: "var(--radius-sm)",
-          backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", cursor: "pointer",
-        }}
+        className="dr-locmap__recenter"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
@@ -201,18 +169,9 @@ export function LocationMap({
           type="button"
           onClick={unlock}
           aria-label="Tap to interact with the map"
-          style={{
-            position: "absolute", inset: 0, zIndex: 1000,
-            display: "flex", alignItems: "flex-end", justifyContent: "center",
-            padding: "0 0 18px", border: "none", background: "transparent", cursor: "pointer",
-          }}
+          className="dr-locmap__veil"
         >
-          <span style={{
-            fontFamily: "var(--font-mono)", fontSize: "var(--text-2xs)", letterSpacing: "0.08em",
-            textTransform: "uppercase", color: "#fff",
-            background: "rgba(18,20,18,0.78)", padding: "8px 14px", borderRadius: "var(--radius-pill)",
-            border: "1px solid rgba(255,255,255,0.16)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)",
-          }}>
+          <span className="dr-locmap__veil-label">
             Tap to explore the map
           </span>
         </button>

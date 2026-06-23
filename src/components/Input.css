@@ -1,0 +1,106 @@
+.dr-input {
+  width: 100%;
+  font-family: var(--font-body);
+}
+
+.dr-input--auto {
+  width: auto;
+}
+
+.dr-input__label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-strong);
+  margin-bottom: 7px;
+}
+
+.dr-input__field-wrap {
+  position: relative;
+}
+
+.dr-input__icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  display: flex;
+  pointer-events: none;
+}
+
+.dr-input__field {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--text-strong);
+  background: var(--surface-page);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  outline: none;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+  box-sizing: border-box;
+}
+
+.dr-input__field:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--shadow-focus);
+}
+
+.dr-input__field:disabled {
+  background: var(--surface-muted);
+}
+
+.dr-input--sm .dr-input__field {
+  height: 36px;
+}
+
+.dr-input--md .dr-input__field {
+  height: 44px;
+}
+
+.dr-input--lg .dr-input__field {
+  height: 52px;
+}
+
+.dr-input--icon .dr-input__field {
+  padding: 0 14px 0 40px;
+}
+
+.dr-input--multiline .dr-input__field {
+  height: auto;
+  padding: 11px 14px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.dr-input--multiline.dr-input--sm .dr-input__field {
+  min-height: 60px;
+}
+
+.dr-input--multiline.dr-input--md .dr-input__field {
+  min-height: 68px;
+}
+
+.dr-input--multiline.dr-input--lg .dr-input__field {
+  min-height: 76px;
+}
+
+/* Error border wins over focus */
+.dr-input--error .dr-input__field,
+.dr-input--error .dr-input__field:focus {
+  border-color: var(--status-danger);
+}
+
+.dr-input__msg {
+  margin-top: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.dr-input--error .dr-input__msg {
+  color: var(--status-danger);
+}

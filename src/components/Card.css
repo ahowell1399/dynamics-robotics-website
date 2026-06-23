@@ -1,0 +1,30 @@
+.dr-card {
+  position: relative;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--dr-card-pad);
+  box-shadow: var(--shadow-sm);
+  transform: none;
+  transition: box-shadow var(--dur-base) var(--ease-standard), transform var(--dur-base) var(--ease-standard);
+  cursor: default;
+  overflow: hidden;
+}
+
+.dr-card--interactive {
+  cursor: pointer;
+}
+
+.dr-card--interactive:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.dr-card__accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-primary);
+}

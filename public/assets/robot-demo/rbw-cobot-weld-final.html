@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RBW Cobot — Seam + Circle Weld</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #0c0e12; }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; cursor: grab; }
+
+  .brand { position: fixed; top: 16px; left: 18px; z-index: 12; pointer-events: none;
+    font-family: ui-sans-serif, system-ui, sans-serif; color: #e6eaf0; }
+  .brand h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.04em; }
+  .brand .tag { display:inline-block; background:#257D33; color:#fff; font-weight:700;
+    font-size:11px; padding:1px 6px; border-radius:3px; margin-right:6px; letter-spacing:0.06em; }
+  .brand p { font-size: 12px; color: #7d8694; margin-top: 4px; }
+
+  .toggle { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 12;
+    display: inline-flex; padding: 4px; gap: 4px;
+    background: rgba(16,19,24,0.82); backdrop-filter: blur(10px);
+    border: 0.5px solid rgba(255,255,255,0.12); border-radius: 11px; }
+  .toggle button { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px;
+    letter-spacing: 0.03em; color: #aab2bc; background: transparent; border: none;
+    border-radius: 8px; padding: 8px 22px; cursor: pointer; transition: all .15s;
+    -webkit-user-select:none; user-select:none; }
+  .toggle button:hover { color: #e6eaf0; }
+  .toggle button.on { background: #257D33; color: #fff; box-shadow: 0 2px 8px rgba(37,125,51,0.4); }
+
+  .sticks { position: fixed; left:0; right:0; bottom:20px; z-index:12;
+    display:flex; justify-content:space-between; align-items:flex-end;
+    padding: 0 26px; pointer-events:none; transition: opacity .25s; }
+  body.auto-mode .sticks { opacity: 0; }
+  body.auto-mode .sticks * { pointer-events: none !important; }
+  .stick-wrap { pointer-events:auto; display:flex; flex-direction:column; align-items:center; gap:9px; }
+  .stick-label { font-family: ui-sans-serif, system-ui, sans-serif; font-size:11px;
+    color:#8d97a5; letter-spacing:0.03em; text-align:center; line-height:1.4; }
+  .stick-label b { color:#c7cdd6; font-weight:500; }
+  .stick { position:relative; width:130px; height:130px; border-radius:50%;
+    background:rgba(20,24,30,0.62); backdrop-filter:blur(8px);
+    border:0.5px solid rgba(255,255,255,0.16); touch-action:none; }
+  .stick::before, .stick::after { content:''; position:absolute; background:rgba(255,255,255,0.10); }
+  .stick::before { left:12px; right:12px; top:50%; height:1px; transform:translateY(-50%); }
+  .stick::after { top:12px; bottom:12px; left:50%; width:1px; transform:translateX(-50%); }
+  .knob { position:absolute; left:50%; top:50%; width:56px; height:56px; border-radius:50%;
+    margin:-28px 0 0 -28px;
+    background:radial-gradient(circle at 38% 34%, #3a3f47, #20242b);
+    border:0.5px solid rgba(255,255,255,0.22);
+    box-shadow:0 3px 10px rgba(0,0,0,0.5), inset 0 0 0 4px rgba(37,125,51,0.0);
+    transition: box-shadow .12s; }
+  .knob.live { box-shadow:0 3px 12px rgba(0,0,0,0.5), inset 0 0 0 4px rgba(37,125,51,0.45); }
+
+  .hint { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); z-index:11;
+    font-family: ui-sans-serif, system-ui, sans-serif; font-size:11px; color:#5b6470;
+    text-align:center; pointer-events:none; transition: opacity .25s; }
+  body.auto-mode .hint { opacity: 0; }
+  .status { position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:11;
+    font-family: ui-sans-serif, system-ui, sans-serif; font-size:12px; color:#c7cdd6;
+    letter-spacing:0.03em; display:flex; align-items:center; gap:8px; opacity:0; transition:opacity .25s;
+    pointer-events:none; }
+  body.auto-mode .status { opacity: 1; }
+  .status .dot { width:8px; height:8px; border-radius:50%; background:#3b6d11; box-shadow:0 0 8px #4e8a1a; }
+  .status .dot.welding { background:#ff7a2c; box-shadow:0 0 10px #ff7a2c; }
+
+  @media (max-width: 600px){
+    .stick{ width:112px; height:112px; } .knob{ width:48px; height:48px; margin:-24px 0 0 -24px; }
+    .sticks{ padding:0 14px; } .hint{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="brand">
+  <h1><span class="tag">RBW</span>RB-X COBOT</h1>
+  <p id="brandSub">running weld program</p>
+</div>
+
+<div class="toggle">
+  <button id="segManual">Manual</button>
+  <button id="segAuto" class="on">Auto</button>
+</div>
+
+<div class="sticks">
+  <div class="stick-wrap">
+    <div class="stick" id="stickL"><div class="knob" id="knobL"></div></div>
+    <div class="stick-label"><b>Move arm</b><br>swing &middot; raise</div>
+  </div>
+  <div class="stick-wrap">
+    <div class="stick" id="stickR"><div class="knob" id="knobR"></div></div>
+    <div class="stick-label"><b>Reach &amp; aim</b><br>elbow &middot; wrist tilt</div>
+  </div>
+</div>
+<div class="hint">touch the torch tip to any metal to strike an arc &middot; drag to look &middot; scroll to zoom</div>
+<div class="status"><span class="dot" id="statusDot"></span><span id="statusTxt">At Rest</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function () {
+  const container = document.getElementById('app');
+  const D2R = Math.PI/180;
+  const SLOW_RATE = 26;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.08;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0c0e12);
+  scene.fog = new THREE.Fog(0x0c0e12, 16, 40);
+
+  const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+  const target = new THREE.Vector3(0.72, 2.05, 1.75);
+
+  scene.add(new THREE.HemisphereLight(0x8a96a8, 0x161a20, 0.65));
+  const key = new THREE.DirectionalLight(0xffffff, 1.45);
+  key.position.set(7, 12, 7); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.near = 1; key.shadow.camera.far = 45;
+  key.shadow.camera.left = -12; key.shadow.camera.right = 12;
+  key.shadow.camera.top = 12; key.shadow.camera.bottom = -12;
+  key.shadow.bias = -0.0004; scene.add(key);
+  const fill = new THREE.DirectionalLight(0x5a78a8, 0.45);
+  fill.position.set(-9, 6, -5); scene.add(fill);
+  const overhead = new THREE.PointLight(0xcfe0ff, 0.5, 30, 2);
+  overhead.position.set(0, 10, 2); scene.add(overhead);
+
+  const matShell   = new THREE.MeshStandardMaterial({ color: 0xeceef0, metalness: 0.25, roughness: 0.5 });
+  const matJoint   = new THREE.MeshStandardMaterial({ color: 0x9da3aa, metalness: 0.45, roughness: 0.45 });
+  const matDarkSeg = new THREE.MeshStandardMaterial({ color: 0x4d5258, metalness: 0.55, roughness: 0.5 });
+  const matCollar  = new THREE.MeshStandardMaterial({ color: 0x767b82, metalness: 0.1, roughness: 0.95 }); // matte grey caps
+  const matSteel   = new THREE.MeshStandardMaterial({ color: 0x9aa0a8, metalness: 0.95, roughness: 0.3 });
+  const matBlack   = new THREE.MeshStandardMaterial({ color: 0x141619, metalness: 0.5, roughness: 0.6 });
+  const matYellow  = new THREE.MeshStandardMaterial({ color: 0xe8b81c, metalness: 0.4, roughness: 0.5 });
+  const matPlate   = new THREE.MeshStandardMaterial({ color: 0x595f66, metalness: 0.85, roughness: 0.38 });
+
+  function cyl(rt, rb, h, mat, seg){ const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg||36),mat); m.castShadow=true; m.receiveShadow=true; return m; }
+  function box(w,h,d,mat){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.castShadow=true; m.receiveShadow=true; return m; }
+  function sph(r,mat){ const m=new THREE.Mesh(new THREE.SphereGeometry(r,28,20),mat); m.castShadow=true; m.receiveShadow=true; return m; }
+  // joint module: grey body + two PROUD matte-grey collars (larger radius -> no z-fighting)
+  // axis: 'x' = drum lies along X, 'z' = drum points in depth (round face to the side, cobot pitch actuator)
+  function jointCan(r,len,axis){
+    const g=new THREE.Group();
+    const body=cyl(r,r,len,matJoint,40);
+    const cl = len*0.16;
+    const c1=cyl(r*1.05, r*1.05, cl, matCollar, 40); c1.position.y =  (len/2 - cl*0.5 - len*0.03);
+    const c2=cyl(r*1.05, r*1.05, cl, matCollar, 40); c2.position.y = -(len/2 - cl*0.5 - len*0.03);
+    g.add(body,c1,c2);
+    if(axis==='x'||axis===true) g.rotation.z=Math.PI/2;
+    else if(axis==='z') g.rotation.x=Math.PI/2;
+    return g;
+  }
+  function shellTube(r,len){
+    const g=new THREE.Group(); const body=cyl(r,r,len,matShell,36);
+    const e1=sph(r,matShell); e1.position.y=len/2; const e2=sph(r,matShell); e2.position.y=-len/2;
+    g.add(body,e1,e2); return g;
+  }
+
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(24,64),
+    new THREE.MeshStandardMaterial({ color:0x20242a, metalness:0.35, roughness:0.6 }));
+  floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+  const grid = new THREE.GridHelper(44,44,0x2c323a,0x23272d);
+  grid.position.y=0.002; grid.material.opacity=0.3; grid.material.transparent=true; scene.add(grid);
+
+  const tableGrp = new THREE.Group(); scene.add(tableGrp);
+  const tableTop = box(5.6,0.18,4.0, new THREE.MeshStandardMaterial({ color:0x44494f, metalness:0.85, roughness:0.42 }));
+  tableTop.position.set(1.2,1.55,1.4); tableGrp.add(tableTop);
+  const TABLE_TOP_Y = 1.64;
+  const TABLE_X0=-1.6, TABLE_X1=4.0, TABLE_Z0=-0.6, TABLE_Z1=3.4;
+  const holeMat = new THREE.MeshStandardMaterial({ color:0x16181c, metalness:0.6, roughness:0.6 });
+  const holes = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.07,0.07,0.2,12), holeMat, 13*9);
+  let hi=0; const dummy=new THREE.Object3D();
+  for(let ix=0;ix<13;ix++) for(let iz=0;iz<9;iz++){ dummy.position.set(1.2-2.5+ix*0.42,1.62,1.4-1.7+iz*0.42); dummy.updateMatrix(); holes.setMatrixAt(hi++,dummy.matrix); }
+  holes.receiveShadow=true; tableGrp.add(holes);
+  const legMat = new THREE.MeshStandardMaterial({ color:0xb8bcc2, metalness:0.85, roughness:0.35 });
+  [[-2.4,-1.7],[2.4,-1.7],[-2.4,1.7],[2.4,1.7]].forEach(([x,z])=>{
+    const leg=box(0.22,1.5,0.22,legMat); leg.position.set(1.2+x,0.78,1.4+z); tableGrp.add(leg);
+    const caster=cyl(0.13,0.13,0.16,matBlack,18); caster.position.set(1.2+x,0.08,1.4+z); tableGrp.add(caster);
+  });
+  const railF=box(5.0,0.2,0.2,legMat); railF.position.set(1.2,0.45,1.4-1.7); tableGrp.add(railF);
+  const railB=railF.clone(); railB.position.z=1.4+1.7; tableGrp.add(railB);
+
+  // ================= WORKPIECES =================
+  const PLATE_T = 0.10;
+  const BASE_TOP_Y = TABLE_TOP_Y + PLATE_T;    // 1.74
+  const jointCenterX = 0.35, jointZ = 1.15;
+
+  // --- T-joint (base plate + upright) for the straight seam ---
+  const baseC = { x:jointCenterX, y:TABLE_TOP_Y+PLATE_T/2, z:1.25, hx:0.95, hy:PLATE_T/2, hz:0.50 };
+  const vertC = { x:jointCenterX, y:BASE_TOP_Y+0.31, z:jointZ+PLATE_T/2, hx:0.75, hy:0.31, hz:PLATE_T/2 };
+  const basePlateMesh = box(baseC.hx*2, PLATE_T, baseC.hz*2, matPlate); basePlateMesh.position.set(baseC.x, baseC.y, baseC.z); tableGrp.add(basePlateMesh);
+  const vertPlate = box(vertC.hx*2, vertC.hy*2, PLATE_T, matPlate); vertPlate.position.set(vertC.x, vertC.y, vertC.z); tableGrp.add(vertPlate);
+  [-0.55, 0.55].forEach(dx=>{
+    const cm = new THREE.MeshStandardMaterial({ color:0x2c2f34, metalness:0.6, roughness:0.5 });
+    const c = box(0.12, 0.4, 0.18, cm); c.position.set(jointCenterX+dx, BASE_TOP_Y+0.2, jointZ + PLATE_T + 0.13); tableGrp.add(c);
+    const arm = box(0.12, 0.1, 0.22, cm); arm.position.set(jointCenterX+dx, BASE_TOP_Y+0.36, jointZ + PLATE_T + 0.04); tableGrp.add(arm);
+  });
+
+  // --- separate side sheet for the circle weld (out front, fully visible) ---
+  const sideC = { x:1.1, y:TABLE_TOP_Y+PLATE_T/2, z:2.35, hx:0.35, hy:PLATE_T/2, hz:0.35 };
+  const sideSheet = box(sideC.hx*2, PLATE_T, sideC.hz*2, matPlate); sideSheet.position.set(sideC.x, sideC.y, sideC.z); tableGrp.add(sideSheet);
+
+  // ---- straight seam (front fillet of the T-joint) ----
+  const SEAM_X0 = jointCenterX - 0.42, SEAM_X1 = jointCenterX + 0.42;
+  const SEAM_Y  = BASE_TOP_Y + 0.018, SEAM_Z = jointZ - 0.012;
+
+  // ---- circle layout on the side sheet ----
+  const CIRC_CX = sideC.x, CIRC_CZ = sideC.z, CIRC_R = 0.16;
+  const CIRC_TIP_Y = BASE_TOP_Y + 0.03;
+  const ringMark = new THREE.Mesh(new THREE.TorusGeometry(CIRC_R, 0.007, 8, 64),
+    new THREE.MeshStandardMaterial({ color:0x2b2e34, metalness:0.5, roughness:0.7 }));
+  ringMark.rotation.x = -Math.PI/2; ringMark.position.set(CIRC_CX, BASE_TOP_Y+0.005, CIRC_CZ); tableGrp.add(ringMark);
+
+  // ---- weld beads: line beads (seam) + circle beads ----
+  const beadGeo = new THREE.SphereGeometry(0.030, 12, 10);
+  const COLD = new THREE.Color(0x70757c), HOT = new THREE.Color(0xff7e2e);
+  const beads = [];
+  function addBead(x, y, z){
+    const mat = new THREE.MeshStandardMaterial({ color: COLD.clone(), metalness:0.55, roughness:0.5, emissive:new THREE.Color(0x000000), emissiveIntensity:0 });
+    const m = new THREE.Mesh(beadGeo, mat); m.position.set(x, y, z); m.scale.setScalar(0.0001); m.castShadow=true; tableGrp.add(m);
+    beads.push({ mesh:m, x, z, welded:false, heat:0, s:0 });
+  }
+  const N_LINE = 42;
+  for(let i=0;i<N_LINE;i++){ const bx = SEAM_X0 + (SEAM_X1-SEAM_X0)*(i/(N_LINE-1)); addBead(bx, SEAM_Y + (i%2)*0.004, SEAM_Z); }
+  const N_CIRC = 44;
+  for(let i=0;i<N_CIRC;i++){ const th=i/N_CIRC*Math.PI*2; addBead(CIRC_CX+CIRC_R*Math.cos(th), BASE_TOP_Y+0.012+(i%2)*0.004, CIRC_CZ+CIRC_R*Math.sin(th)); }
+  function resetBeads(){ beads.forEach(b=>{ b.welded=false; b.heat=0; }); }
+
+  // ================= ROBOT =================
+  const robot = new THREE.Group(); robot.position.set(2.4,1.64,1.6); scene.add(robot);
+  const pedestal=box(1.0,0.5,1.0,matBlack); pedestal.position.y=-0.2; robot.add(pedestal);
+  const yPlate=box(1.1,0.12,1.1,matYellow); yPlate.position.y=0.06; robot.add(yPlate);
+  const baseModule=cyl(0.46,0.5,0.42,matShell,40); baseModule.position.y=0.33; robot.add(baseModule);
+  const baseCap=cyl(0.41,0.41,0.1,matCollar,40); baseCap.position.y=0.55; robot.add(baseCap);
+
+  const j1=new THREE.Group(); j1.position.y=0.6; robot.add(j1);
+  const j1can=jointCan(0.42,0.6,false); j1can.position.y=0.1; j1.add(j1can);
+  const j2=new THREE.Group(); j2.position.y=0.45; j1.add(j2);
+  j2.add(jointCan(0.4,0.86,'z'));   // shoulder pitch actuator — round face to the side
+  const upperArm=new THREE.Group(); j2.add(upperArm);
+  const upTube=shellTube(0.33,2.9); upTube.position.y=1.45; upperArm.add(upTube);
+  const band=cyl(0.345,0.345,0.55,matDarkSeg,36); band.position.y=2.35; upperArm.add(band);
+  const logo=box(0.04,0.34,0.34,new THREE.MeshStandardMaterial({ color:0x257D33, metalness:0.3, roughness:0.5 }));
+  logo.position.set(0.33,2.35,0); upperArm.add(logo);
+
+  const OFF_E=0.34;                 // cobot side-mount: forearm sits offset in depth from the upper arm
+  const j3=new THREE.Group(); j3.position.y=2.9; upperArm.add(j3);
+  // elbow drum bridges the depth offset between upper arm and forearm
+  const elbowCan=jointCan(0.34,OFF_E+0.30,'z'); elbowCan.position.z=OFF_E/2; j3.add(elbowCan);
+  const foreArm=new THREE.Group(); foreArm.position.z=OFF_E; j3.add(foreArm);   // <-- offset beside the upper arm
+  const foreTube1=shellTube(0.27,1.2); foreTube1.position.y=0.6; foreArm.add(foreTube1);
+  // middle joint (forearm pitch) — drum mounted to the SIDE of the forearm so it clears when folding down
+  const j3b=new THREE.Group(); j3b.position.y=1.2; foreArm.add(j3b);
+  j3b.add(jointCan(0.30,0.62,'z'));
+  const foreArm2=new THREE.Group(); j3b.add(foreArm2);
+  const foreTube2=shellTube(0.25,1.2); foreTube2.position.y=0.6; foreArm2.add(foreTube2);
+  const j4=new THREE.Group(); j4.position.y=1.2; foreArm2.add(j4);
+  const j4can=jointCan(0.26,0.52,false); j4can.position.y=0.12;
+  j4can.children.forEach(c=>{ if(c.material===matJoint) c.material=matDarkSeg; }); j4.add(j4can);
+  const wristSeg=cyl(0.24,0.24,0.5,matDarkSeg,32); wristSeg.position.y=0.45; j4.add(wristSeg);
+  const j5=new THREE.Group(); j5.position.y=0.6; j4.add(j5);
+  const j5can=jointCan(0.22,0.46,true);
+  j5can.children.forEach(c=>{ if(c.material===matJoint) c.material=matDarkSeg; }); j5.add(j5can);
+  const j6=new THREE.Group(); j5.add(j6);
+  const flangeHub=cyl(0.2,0.22,0.3,matSteel,32); flangeHub.position.y=0.28; j6.add(flangeHub);
+  const flangePlate=cyl(0.24,0.24,0.06,matCollar,32); flangePlate.position.y=0.45; j6.add(flangePlate);
+
+  const torch=new THREE.Group(); torch.position.y=0.48; j6.add(torch);
+  const torchBody=cyl(0.1,0.13,0.5,matBlack,24); torchBody.position.y=0.25; torch.add(torchBody);
+  const grip=cyl(0.12,0.12,0.16,matDarkSeg,24); grip.position.y=0.42; torch.add(grip);
+  const neck=cyl(0.06,0.07,0.5,matSteel,18); neck.position.set(0.13,0.66,0); neck.rotation.z=-0.55; torch.add(neck);
+  const nozzle=cyl(0.05,0.075,0.28,new THREE.MeshStandardMaterial({ color:0xb07030, metalness:0.9, roughness:0.3 }),20);
+  nozzle.position.set(0.32,0.86,0); nozzle.rotation.z=-0.55; torch.add(nozzle);
+  const tipPos=new THREE.Vector3(0.4,0.96,0);
+  const tip=cyl(0.02,0.035,0.1,matSteel,12); tip.position.copy(tipPos); tip.rotation.z=-0.55; torch.add(tip);
+
+  const arcLight=new THREE.PointLight(0x9fd8ff,0,7,2); torch.add(arcLight);
+  arcLight.position.copy(tipPos).add(new THREE.Vector3(0.05,0.08,0));
+  const arcMat=new THREE.MeshBasicMaterial({ color:0xdff0ff, transparent:true, opacity:0 });
+  const arcCore=new THREE.Mesh(new THREE.SphereGeometry(0.06,12,12),arcMat); arcCore.position.copy(arcLight.position); torch.add(arcCore);
+  const glowMat=new THREE.MeshBasicMaterial({ color:0x7fc4ff, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false });
+  const arcGlow=new THREE.Mesh(new THREE.SphereGeometry(0.16,12,12),glowMat); arcGlow.position.copy(arcLight.position); torch.add(arcGlow);
+
+  // ---- world-space spatter sparks (proper gravity + surface bounce + cooling) ----
+  const SPARKS=170;
+  const sparkGeo=new THREE.BufferGeometry();
+  const sparkPos=new Float32Array(SPARKS*3); const sparkCol=new Float32Array(SPARKS*3);
+  const sparkVel=[]; const sparkLife=new Float32Array(SPARKS); const sparkMax=new Float32Array(SPARKS);
+  for(let i=0;i<SPARKS;i++){ sparkVel.push(new THREE.Vector3()); sparkLife[i]=0; sparkPos[i*3+1]=-100; }
+  sparkGeo.setAttribute('position',new THREE.BufferAttribute(sparkPos,3));
+  sparkGeo.setAttribute('color',new THREE.BufferAttribute(sparkCol,3));
+  const sparkMat=new THREE.PointsMaterial({ size:0.045, vertexColors:true, transparent:true, opacity:1, blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true });
+  const sparks=new THREE.Points(sparkGeo,sparkMat); scene.add(sparks);   // world space (not parented to torch)
+  function spawnSpark(i, ox,oy,oz){
+    sparkPos[i*3]=ox; sparkPos[i*3+1]=oy; sparkPos[i*3+2]=oz;
+    const a=Math.random()*Math.PI*2, hs=0.35+Math.random()*1.25, vs=-0.1+Math.random()*0.95;
+    sparkVel[i].set(Math.cos(a)*hs, vs, Math.sin(a)*hs);
+    sparkMax[i]=0.22+Math.random()*0.30; sparkLife[i]=sparkMax[i];
+    sparkCol[i*3]=1; sparkCol[i*3+1]=0.9; sparkCol[i*3+2]=0.6;
+  }
+  const SPARK_GRAV=5.6;
+  function updateSparks(dt){
+    for(let i=0;i<SPARKS;i++){
+      if(sparkLife[i]<=0) continue;
+      sparkLife[i]-=dt;
+      sparkVel[i].y -= SPARK_GRAV*dt;
+      sparkPos[i*3]+=sparkVel[i].x*dt; sparkPos[i*3+1]+=sparkVel[i].y*dt; sparkPos[i*3+2]+=sparkVel[i].z*dt;
+      let fy=floorAt(sparkPos[i*3], sparkPos[i*3+2]); if(fy===-Infinity) fy=-50;
+      if(sparkPos[i*3+1] < fy){ sparkPos[i*3+1]=fy+0.003; sparkVel[i].y=Math.abs(sparkVel[i].y)*0.30; sparkVel[i].x*=0.55; sparkVel[i].z*=0.55; }
+      const tt=1-Math.max(sparkLife[i],0)/sparkMax[i], b=Math.max(0,1-tt*tt);
+      sparkCol[i*3]=b; sparkCol[i*3+1]=b*(0.8-0.6*tt); sparkCol[i*3+2]=b*(0.45-0.45*tt);
+      if(sparkLife[i]<=0){ sparkPos[i*3+1]=-100; sparkCol[i*3]=sparkCol[i*3+1]=sparkCol[i*3+2]=0; }
+    }
+    sparkGeo.attributes.position.needsUpdate=true;
+    sparkGeo.attributes.color.needsUpdate=true;
+  }
+  const puddleMat=new THREE.MeshBasicMaterial({ color:0xff9a3c, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false });
+  const puddle=new THREE.Mesh(new THREE.CircleGeometry(0.085,20),puddleMat); puddle.rotation.x=-Math.PI/2; scene.add(puddle);
+
+  // ================= JOINTS =================
+  const joints = [
+    { id:'base',  group:j1,  axis:'y', min:-180, max:180, cur:8,   vel:0 },
+    { id:'shldr', group:j2,  axis:'z', min:-100, max:40,  cur:-40, vel:0 },
+    { id:'elbow', group:j3,  axis:'z', min:-5,   max:150, cur:90,  vel:0 },
+    { id:'fpitch',group:j3b, axis:'z', min:-80,  max:80,  cur:45,  vel:0 },
+    { id:'wroll', group:j4,  axis:'y', min:-360, max:360, cur:0,   vel:0 },
+    { id:'wpit',  group:j5,  axis:'z', min:-95,  max:100, cur:42,  vel:0 },
+    { id:'troll', group:j6,  axis:'y', min:-360, max:360, cur:0,   vel:0 },
+  ];
+  const J = {}; joints.forEach(j=> J[j.id]=j);
+  function applyJoints(){ joints.forEach(j=> j.group.rotation[j.axis]=j.cur*D2R); robot.updateMatrixWorld(true); }
+
+  // ---- self-collision: model links as capsules so they can't pass through each other ----
+  const _cs=new THREE.Vector3(),_ce=new THREE.Vector3(),_cfb=new THREE.Vector3(),_cm=new THREE.Vector3(),_cw=new THREE.Vector3(),_cf=new THREE.Vector3(),_ct=new THREE.Vector3();
+  const BASE_BOT=new THREE.Vector3(2.4,1.74,1.6);
+  const _d1=new THREE.Vector3(),_d2=new THREE.Vector3(),_rr=new THREE.Vector3(),_p1=new THREE.Vector3(),_p2=new THREE.Vector3();
+  const clamp01=x=> x<0?0:(x>1?1:x);
+  function segSegDist(p1,q1,p2,q2){   // shortest distance between two 3D segments
+    _d1.subVectors(q1,p1); _d2.subVectors(q2,p2); _rr.subVectors(p1,p2);
+    const a=_d1.dot(_d1), e=_d2.dot(_d2), f=_d2.dot(_rr); let s,t; const EPS=1e-8;
+    if(a<=EPS&&e<=EPS){ s=0;t=0; }
+    else if(a<=EPS){ s=0; t=clamp01(f/e); }
+    else { const c=_d1.dot(_rr);
+      if(e<=EPS){ t=0; s=clamp01(-c/a); }
+      else { const b=_d1.dot(_d2), denom=a*e-b*b;
+        s = denom>EPS ? clamp01((b*f-c*e)/denom) : 0;
+        t = (b*s+f)/e;
+        if(t<0){ t=0; s=clamp01(-c/a); } else if(t>1){ t=1; s=clamp01((b-c)/a); } } }
+    _p1.copy(p1).addScaledVector(_d1,s); _p2.copy(p2).addScaledVector(_d2,t);
+    return _p1.distanceTo(_p2);
+  }
+  function selfColliding(){
+    _cs.setFromMatrixPosition(j2.matrixWorld);    // shoulder
+    _ce.setFromMatrixPosition(j3.matrixWorld);    // elbow
+    _cfb.setFromMatrixPosition(foreArm.matrixWorld); // offset forearm base (beside upper arm)
+    _cm.setFromMatrixPosition(j3b.matrixWorld);   // mid-forearm
+    _cw.setFromMatrixPosition(j4.matrixWorld);    // wrist
+    _cf.setFromMatrixPosition(j6.matrixWorld);    // flange
+    _ct.setFromMatrixPosition(tip.matrixWorld);   // torch tip
+    const rU=0.36,rF1=0.30,rF2=0.28,rW=0.26,rT=0.14,rB=0.47;   // capsule radii
+    // chain: base-upper-fore1-fore2-wrist-torch ; test only NON-adjacent pairs
+    if(segSegDist(BASE_BOT,_cs,_cfb,_cm) < rB+rF1-0.01) return true; // column vs forearm-1
+    if(segSegDist(BASE_BOT,_cs,_cm,_cw) < rB+rF2-0.01) return true;  // column vs forearm-2
+    if(segSegDist(BASE_BOT,_cs,_cw,_cf) < rB+rW-0.01) return true;   // column vs wrist
+    if(segSegDist(BASE_BOT,_cs,_cf,_ct) < rB+rT-0.01) return true;   // column vs torch
+    if(segSegDist(_cs,_ce,_cm,_cw)      < rU+rF2-0.01) return true;  // upper vs forearm-2
+    if(segSegDist(_cs,_ce,_cw,_cf)      < rU+rW-0.01) return true;   // upper vs wrist
+    if(segSegDist(_cs,_ce,_cf,_ct)      < rU+rT-0.01) return true;   // upper vs torch
+    if(segSegDist(_cfb,_cm,_cf,_ct)     < rF1+rT-0.01) return true;  // forearm-1 vs torch
+    return false;
+  }
+
+  // ---- IK (CCD) ----
+  const ccdChain = [J.fpitch, J.elbow, J.shldr, J.base];
+  const _jp=new THREE.Vector3(), _eff=new THREE.Vector3(), _ax=new THREE.Vector3(),
+        _pq=new THREE.Quaternion(), _v1=new THREE.Vector3(), _v2=new THREE.Vector3(), _c=new THREE.Vector3();
+  function ccdSolve(T, iters){
+    for(let it=0; it<iters; it++){
+      for(const j of ccdChain){
+        _jp.setFromMatrixPosition(j.group.matrixWorld);
+        _eff.setFromMatrixPosition(tip.matrixWorld);
+        _ax.set(0, j.axis==='y'?1:0, j.axis==='z'?1:0);
+        j.group.parent.getWorldQuaternion(_pq); _ax.applyQuaternion(_pq).normalize();
+        _v1.copy(_eff).sub(_jp); _v2.copy(T).sub(_jp);
+        _v1.addScaledVector(_ax, -_v1.dot(_ax));
+        _v2.addScaledVector(_ax, -_v2.dot(_ax));
+        if(_v1.lengthSq()<1e-6 || _v2.lengthSq()<1e-6) continue;
+        _v1.normalize(); _v2.normalize();
+        _c.crossVectors(_v1,_v2);
+        let ang = Math.atan2(_ax.dot(_c), _v1.dot(_v2)) * 0.6;
+        let next = j.cur*D2R + ang;
+        next = Math.max(j.min*D2R, Math.min(j.max*D2R, next));
+        j.cur = next/D2R; j.group.rotation[j.axis] = next; robot.updateMatrixWorld(true);
+      }
+    }
+  }
+
+  // ---- Auto cycle: rest -> seam -> travel -> circle -> return, looping ----
+  const smooth = u => u*u*(3-2*u);
+  const REST   = new THREE.Vector3(jointCenterX, SEAM_Y+0.98, SEAM_Z+0.30);
+  const SEAMA  = new THREE.Vector3(SEAM_X0, SEAM_Y+0.03, SEAM_Z+0.03);
+  const SEAMB  = new THREE.Vector3(SEAM_X1, SEAM_Y+0.03, SEAM_Z+0.03);
+  const CIRC0  = new THREE.Vector3(CIRC_CX+CIRC_R, CIRC_TIP_Y, CIRC_CZ);
+  function weldProgram(t){
+    const PERIOD=24;
+    const p=(t%PERIOD)/PERIOD;
+    let point, welding=false, phase;
+    if(p<0.07){ point=REST.clone(); phase='rest'; }
+    else if(p<0.18){ point=REST.clone().lerp(SEAMA, smooth((p-0.07)/0.11)); phase='approach'; }
+    else if(p<0.42){ point=SEAMA.clone().lerp(SEAMB, smooth((p-0.18)/0.24)); welding=true; phase='seam'; }
+    else if(p<0.55){ const u=(p-0.42)/0.13; point=SEAMB.clone().lerp(CIRC0, smooth(u)); point.y += Math.sin(u*Math.PI)*0.32; phase='move'; }
+    else if(p<0.82){ const u=(p-0.55)/0.27; const th=u*Math.PI*2;
+      point=new THREE.Vector3(CIRC_CX+CIRC_R*Math.cos(th), CIRC_TIP_Y, CIRC_CZ+CIRC_R*Math.sin(th)); welding=true; phase='circle'; }
+    else { const u=(p-0.82)/0.18; point=CIRC0.clone().lerp(REST, smooth(u)); point.y += Math.sin(u*Math.PI)*0.18; phase='return'; }
+    return { p, point, welding, phase };
+  }
+
+  // ---- collision floor (manual) ----
+  function floorAt(x,z){
+    if(Math.abs(x-baseC.x)<baseC.hx+0.03 && Math.abs(z-baseC.z)<baseC.hz+0.03) return BASE_TOP_Y;
+    if(Math.abs(x-sideC.x)<sideC.hx+0.03 && Math.abs(z-sideC.z)<sideC.hz+0.03) return BASE_TOP_Y;
+    if(x>TABLE_X0 && x<TABLE_X1 && z>TABLE_Z0 && z<TABLE_Z1) return TABLE_TOP_Y;
+    return -Infinity;
+  }
+  function distBox(p, c){
+    const dx=Math.max(Math.abs(p.x-c.x)-c.hx,0), dy=Math.max(Math.abs(p.y-c.y)-c.hy,0), dz=Math.max(Math.abs(p.z-c.z)-c.hz,0);
+    return Math.sqrt(dx*dx+dy*dy+dz*dz);
+  }
+  function overFlat(p, c){ return Math.abs(p.x-c.x)<c.hx+0.05 && Math.abs(p.z-c.z)<c.hz+0.05 && p.y < BASE_TOP_Y+0.45; }
+
+  // ================= STATE =================
+  const state = { mode:'auto', welding:false, jogInput:{ base:0, shldr:0, elbow:0, wpit:0 } };
+  const segManual=document.getElementById('segManual'), segAuto=document.getElementById('segAuto');
+  const brandSub=document.getElementById('brandSub');
+  const statusDot=document.getElementById('statusDot'), statusTxt=document.getElementById('statusTxt');
+
+  function setMode(m){
+    state.mode=m;
+    segManual.classList.toggle('on', m==='manual');
+    segAuto.classList.toggle('on', m==='auto');
+    document.body.classList.toggle('auto-mode', m==='auto');
+    brandSub.textContent = (m==='auto') ? 'running weld program' : 'manual jog';
+    state.jogInput={ base:0,shldr:0,elbow:0,wpit:0 };
+    if(m==='auto') resetBeads();
+  }
+  segManual.addEventListener('click',()=>setMode('manual'));
+  segAuto.addEventListener('click',()=>setMode('auto'));
+
+  function makeStick(stickEl, knobEl, onChange){
+    let pid=null;
+    const radius=()=> stickEl.clientWidth*0.5 - knobEl.clientWidth*0.30;
+    function set(dx,dy){ const r=radius(), len=Math.hypot(dx,dy);
+      if(len>r){ dx=dx/len*r; dy=dy/len*r; }
+      knobEl.style.transform=`translate(${dx}px,${dy}px)`; onChange(dx/r, -dy/r); }
+    function reset(){ knobEl.style.transform='translate(0,0)'; knobEl.classList.remove('live'); onChange(0,0); }
+    stickEl.addEventListener('pointerdown',e=>{
+      if(document.body.classList.contains('auto-mode')) return;
+      e.preventDefault(); e.stopPropagation();
+      pid=e.pointerId; stickEl.setPointerCapture(pid); knobEl.classList.add('live');
+      const r=stickEl.getBoundingClientRect(); set(e.clientX-(r.left+r.width/2), e.clientY-(r.top+r.height/2));
+    });
+    stickEl.addEventListener('pointermove',e=>{ if(e.pointerId!==pid) return;
+      const r=stickEl.getBoundingClientRect(); set(e.clientX-(r.left+r.width/2), e.clientY-(r.top+r.height/2)); });
+    const up=e=>{ if(e.pointerId!==pid) return; pid=null; reset(); };
+    stickEl.addEventListener('pointerup',up); stickEl.addEventListener('pointercancel',up);
+  }
+  makeStick(document.getElementById('stickL'), document.getElementById('knobL'), (x,y)=>{ state.jogInput.base=x; state.jogInput.shldr=-y; });
+  makeStick(document.getElementById('stickR'), document.getElementById('knobR'), (x,y)=>{ state.jogInput.elbow=-y; state.jogInput.wpit=x; });
+
+  let theta=0.7, phi=1.0, radius=12, dragging=false, px=0, py=0;
+  function applyCamera(){
+    phi=Math.max(0.25,Math.min(1.45,phi));
+    camera.position.x=target.x+radius*Math.sin(phi)*Math.sin(theta);
+    camera.position.y=target.y+radius*Math.cos(phi);
+    camera.position.z=target.z+radius*Math.sin(phi)*Math.cos(theta);
+    camera.lookAt(target);
+  }
+  const dom=renderer.domElement;
+  dom.addEventListener('pointerdown',e=>{ dragging=true; px=e.clientX; py=e.clientY; dom.style.cursor='grabbing'; });
+  window.addEventListener('pointerup',()=>{ dragging=false; dom.style.cursor='grab'; });
+  window.addEventListener('pointermove',e=>{ if(!dragging) return; theta-=(e.clientX-px)*0.006; phi-=(e.clientY-py)*0.006; px=e.clientX; py=e.clientY; applyCamera(); });
+  dom.addEventListener('wheel',e=>{ e.preventDefault(); radius=Math.max(6,Math.min(22,radius+e.deltaY*0.01)); applyCamera(); },{passive:false});
+  window.addEventListener('resize',()=>{ camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+
+  // ================= ANIMATE =================
+  const clock=new THREE.Clock(); const tw=new THREE.Vector3();
+  let lastP=0;
+  const PHASE_TXT = { rest:'At Rest', approach:'Approaching', seam:'Welding Seam', move:'Repositioning', circle:'Welding Circle', return:'Returning' };
+
+  function animate(){
+    requestAnimationFrame(animate);
+    const dt=Math.min(clock.getDelta(),0.05);
+    const t=clock.elapsedTime;
+    const maxStep = SLOW_RATE*dt;
+
+    if(state.mode==='auto'){
+      const prog=weldProgram(t);
+      if(prog.p < lastP) resetBeads();
+      lastP = prog.p;
+      const prev={ base:J.base.cur, shldr:J.shldr.cur, elbow:J.elbow.cur, fpitch:J.fpitch.cur, wpit:J.wpit.cur };
+      J.wpit.cur += (42 - J.wpit.cur)*Math.min(1,dt*3);   // torch tilt held; IK uses base/shldr/elbow/fpitch
+      J.wroll.cur += (0 - J.wroll.cur)*Math.min(1,dt*3);
+      J.troll.cur += (0 - J.troll.cur)*Math.min(1,dt*3);
+      applyJoints();
+      ccdSolve(prog.point, 8);
+      ['base','shldr','elbow','fpitch'].forEach(id=>{
+        const d=J[id].cur-prev[id];
+        if(Math.abs(d)>maxStep) J[id].cur=prev[id]+Math.sign(d)*maxStep;
+      });
+      applyJoints();
+      if(selfColliding()){   // never let the program drive into a self-intersecting pose
+        J.base.cur=prev.base; J.shldr.cur=prev.shldr; J.elbow.cur=prev.elbow; J.fpitch.cur=prev.fpitch; J.wpit.cur=prev.wpit;
+        applyJoints();
+      }
+      state.welding=prog.welding;
+      statusTxt.textContent = PHASE_TXT[prog.phase] || '';
+    } else {
+      tw.setFromMatrixPosition(tip.matrixWorld);
+      const prevTipY = tw.y;
+      const prevAng = {}; joints.forEach(j=> prevAng[j.id]=j.cur);
+      joints.forEach(j=>{
+        const cmd=(j.id in state.jogInput) ? state.jogInput[j.id]*SLOW_RATE : 0;
+        j.vel += (cmd-j.vel)*Math.min(1,dt*8);
+        j.cur += j.vel*dt;
+        j.cur=Math.max(j.min,Math.min(j.max,j.cur));
+      });
+      applyJoints();
+      tw.setFromMatrixPosition(tip.matrixWorld);
+      const fl = floorAt(tw.x, tw.z);
+      if(tw.y < fl - 0.001 && tw.y < prevTipY - 0.0004){
+        joints.forEach(j=>{ j.cur = prevAng[j.id]; j.vel = 0; });
+        applyJoints();
+        tw.setFromMatrixPosition(tip.matrixWorld);
+      }
+      if(selfColliding()){   // don't let the user jog one link through another
+        joints.forEach(j=>{ j.cur = prevAng[j.id]; j.vel = 0; });
+        applyJoints();
+        tw.setFromMatrixPosition(tip.matrixWorld);
+      }
+    }
+
+    // ---- contact with ANY metal (manual) ----
+    tw.setFromMatrixPosition(tip.matrixWorld);
+    if(state.mode==='manual'){
+      const dMetal = Math.min(distBox(tw, baseC), distBox(tw, vertC), distBox(tw, sideC));
+      state.welding = dMetal < 0.10;
+      statusTxt.textContent = state.welding ? 'Welding' : 'Idle';
+    }
+    statusDot.classList.toggle('welding', state.welding);
+
+    // deposit beads (line or circle) by 2D proximity while welding
+    if(state.welding){
+      beads.forEach(b=>{
+        if(Math.hypot(tw.x-b.x, tw.z-b.z) < 0.05 && tw.y < BASE_TOP_Y+0.5){ b.welded=true; b.heat=1; }
+      });
+    }
+    beads.forEach(b=>{
+      b.heat += (0 - b.heat)*Math.min(1,dt*0.7);
+      const ts=b.welded?1:0; b.s += (ts-b.s)*Math.min(1,dt*9);
+      b.mesh.scale.set(b.s, b.s*0.62, b.s); b.mesh.visible = b.s>0.02;
+      b.mesh.material.color.copy(COLD).lerp(HOT, b.heat*0.85);
+      b.mesh.material.emissive.copy(HOT).multiplyScalar(b.heat);
+      b.mesh.material.emissiveIntensity = b.heat*2.2;
+    });
+
+    // welding FX
+    if(state.welding){
+      const fl=0.55+Math.random()*0.45;
+      arcLight.intensity=3.6*fl; arcLight.color.setHSL(0.58,0.4,0.5+Math.random()*0.3);
+      arcMat.opacity=0.85*fl; glowMat.opacity=0.5*fl; arcGlow.scale.setScalar(0.9+Math.random()*0.5);
+      if(overFlat(tw, baseC) || overFlat(tw, sideC)){
+        puddle.position.set(tw.x, BASE_TOP_Y+0.02, tw.z); puddleMat.opacity=0.5+Math.random()*0.35; puddle.scale.setScalar(0.85+Math.random()*0.4);
+      } else { puddleMat.opacity*=0.8; }
+      // emit a burst of spatter from the weld point
+      const emit = 3 + (Math.random()*4|0);
+      for(let k=0;k<emit;k++){ for(let i=0;i<SPARKS;i++){ if(sparkLife[i]<=0){ spawnSpark(i, tw.x, tw.y, tw.z); break; } } }
+    } else {
+      arcLight.intensity*=0.85; arcMat.opacity*=0.85; glowMat.opacity*=0.85; puddleMat.opacity*=0.85;
+    }
+    updateSparks(dt);   // always run so existing sparks finish their arc after the arc stops
+
+    renderer.render(scene,camera);
+  }
+  setMode('auto'); applyJoints(); applyCamera(); animate();
+})();
+</script>
+</body>
+</html>

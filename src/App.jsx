@@ -3,6 +3,7 @@ import { Routes, Route, Outlet, useNavigate, useLocation, useOutletContext } fro
 import { Navbar, Footer } from "./components/index.js";
 import Home from "./pages/Home.jsx";
 import Services from "./pages/Services.jsx";
+import Gallery from "./pages/Gallery.jsx";
 import Contact from "./pages/Contact.jsx";
 
 // Public-dir asset: prefix with BASE_URL so it resolves under the GitHub Pages
@@ -11,8 +12,9 @@ const LOGO_EMBLEM = import.meta.env.BASE_URL + "assets/logo-emblem.png";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Services", href: "/services" },
-  { label: "Contact", href: "/contact" },
+  // { label: "Services", href: "/services" },
+  { label: "Gallery", href: "/gallery" },
+  // { label: "Contact", href: "/contact" },
 ];
 
 function Layout() {
@@ -23,6 +25,10 @@ function Layout() {
   function onClickCapture(e) {
     const a = e.target.closest("a");
     if (!a) return;
+    // Leaflet's zoom / attribution controls are <a href="#"> — let Leaflet
+    // handle them instead of treating them as in-app navigation (which would
+    // otherwise send "#" links to the home page).
+    if (a.closest(".leaflet-container")) return;
     const href = a.getAttribute("href");
     if (!href) return;
     if (href === "#") { e.preventDefault(); navigate("/"); return; }
@@ -31,7 +37,7 @@ function Layout() {
 
   return (
     <div className="dr-shell" onClickCapture={onClickCapture}>
-      <Navbar logoSrc={LOGO_EMBLEM} activeHref={location.pathname} ctaLabel="Request a quote" onCta={() => navigate("/contact")} links={NAV_LINKS} />
+      <Navbar logoSrc={LOGO_EMBLEM} activeHref={location.pathname} ctaLabel="Request A Quote" onCta={() => navigate("/contact")} links={NAV_LINKS} />
       <div className="dr-page" key={location.pathname}>
         <Outlet context={{ selected, setSelected }} />
       </div>
@@ -48,6 +54,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="services" element={<Services />} />
+        <Route path="gallery" element={<Gallery />} />
         <Route path="contact" element={<Contact />} />
         <Route path="*" element={<Home />} />
       </Route>

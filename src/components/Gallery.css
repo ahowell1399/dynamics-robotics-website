@@ -1,0 +1,207 @@
+.dr-gallery {
+  position: relative;
+  font-family: var(--font-body);
+}
+
+.dr-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(var(--dr-gallery-cols), 1fr);
+  gap: var(--space-4);
+}
+
+.dr-gallery__item {
+  position: relative;
+  display: block;
+  padding: 0;
+  text-align: left;
+  background: var(--surface-card);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--dur-base) var(--ease-standard), box-shadow var(--dur-base), transform var(--dur-base);
+  transform: none;
+}
+
+.dr-gallery__item:not(.is-selected):hover {
+  border-color: var(--border-strong);
+}
+
+.dr-gallery__item.is-selected {
+  border: 2px solid var(--color-primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.dr-gallery__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.dr-gallery__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.92);
+}
+
+.dr-gallery__item.is-selected .dr-gallery__img {
+  filter: none;
+}
+
+.dr-gallery__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--neutral-400);
+}
+
+.dr-gallery__placeholder-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dr-gallery__check {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border-default);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast), transform var(--dur-fast);
+  transform: scale(0.92);
+}
+
+.dr-gallery__item.is-selected .dr-gallery__check {
+  background: var(--color-primary);
+  border: none;
+  transform: scale(1);
+}
+
+.dr-gallery__cat {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(20, 22, 20, 0.72);
+  backdrop-filter: blur(4px);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.dr-gallery__caption {
+  padding: 13px 15px 15px;
+}
+
+.dr-gallery__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  color: var(--text-strong);
+  line-height: 1.2;
+}
+
+.dr-gallery__spec {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.dr-gallery__bar {
+  position: fixed;
+  bottom: 24px;
+  left: 16px;
+  right: 16px;
+  z-index: 40;
+  margin: 0 auto;
+  max-width: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px 12px 20px;
+  background: var(--surface-ink);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
+}
+
+.dr-gallery__bar.is-active {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dr-gallery__bar-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.dr-gallery__count {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.dr-gallery__label {
+  font-size: var(--text-sm);
+  color: var(--neutral-300);
+}
+
+.dr-gallery__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 20px;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur-fast);
+}
+
+.dr-gallery__cta:hover {
+  background: var(--color-primary-hover);
+}

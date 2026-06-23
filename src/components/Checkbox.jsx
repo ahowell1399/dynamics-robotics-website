@@ -1,4 +1,5 @@
 import React from "react";
+import "./Checkbox.css";
 
 /**
  * Dynamic Robotics & Integrations — Checkbox
@@ -11,35 +12,24 @@ export function Checkbox({
   disabled = false,
   style = {},
 }) {
+  const className = [
+    "dr-checkbox",
+    hint ? "dr-checkbox--hint" : "",
+    disabled ? "dr-checkbox--disabled" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <label
-      style={{
-        display: "flex",
-        alignItems: hint ? "flex-start" : "center",
-        gap: 11,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        fontFamily: "var(--font-body)",
-        ...style,
-      }}
-    >
+    <label className={className} style={style}>
       <input
         type="checkbox"
+        className="dr-checkbox__input"
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange && onChange(e.target.checked)}
-        style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
       />
-      <span
-        style={{
-          width: 20, height: 20, flexShrink: 0, marginTop: hint ? 1 : 0,
-          borderRadius: "var(--radius-xs)",
-          border: `1.5px solid ${checked ? "var(--color-primary)" : "var(--border-strong)"}`,
-          background: checked ? "var(--color-primary)" : "var(--surface-page)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          transition: "all var(--dur-fast) var(--ease-standard)",
-        }}
-      >
+      <span className="dr-checkbox__box">
         {checked && (
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
             <path d="M5 12l5 5 9-9" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -47,9 +37,9 @@ export function Checkbox({
         )}
       </span>
       {label && (
-        <span style={{ minWidth: 0 }}>
-          <span style={{ display: "block", fontSize: "var(--text-md)", color: "var(--text-strong)", lineHeight: 1.3 }}>{label}</span>
-          {hint && <span style={{ display: "block", fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: 2 }}>{hint}</span>}
+        <span className="dr-checkbox__text">
+          <span className="dr-checkbox__label">{label}</span>
+          {hint && <span className="dr-checkbox__hint">{hint}</span>}
         </span>
       )}
     </label>

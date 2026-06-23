@@ -1,0 +1,313 @@
+/* Dynamic Robotics And Integration — Navbar
+   Co-located styles extracted from Navbar.jsx. Values preserved verbatim. */
+
+/* Easing constants (formerly JS SPRING/SNAP). */
+/*  SPRING = cubic-bezier(0.34, 1.4, 0.5, 1)
+    SNAP   = cubic-bezier(0.2, 0, 0.1, 1) */
+
+/* ---- Block: header ------------------------------------------------------ */
+.dr-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 80px;
+  padding: 0 var(--gutter);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--font-body);
+}
+
+.dr-navbar--mobile {
+  height: 64px;
+}
+
+/* ---- Desktop nav list --------------------------------------------------- */
+.dr-navbar__nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---- NavLink ------------------------------------------------------------ */
+.dr-navbar__link {
+  position: relative;
+  padding: 8px 14px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-body);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-base) cubic-bezier(0.34, 1.4, 0.5, 1);
+  transform: translateY(0);
+  display: inline-block;
+}
+
+.dr-navbar__link:hover,
+.dr-navbar__link--active {
+  color: var(--text-strong);
+  text-decoration: none;
+}
+
+.dr-navbar__link:hover {
+  transform: translateY(-1px);
+}
+
+.dr-navbar__underline {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-primary);
+  transform-origin: right;
+  transform: scaleX(0);
+  opacity: 0;
+  transition: transform var(--dur-base) cubic-bezier(0.34, 1.4, 0.5, 1),
+    opacity var(--dur-fast);
+}
+
+.dr-navbar__link--active .dr-navbar__underline,
+.dr-navbar__link:hover .dr-navbar__underline {
+  transform: scaleX(1);
+  opacity: 1;
+  transform-origin: left;
+}
+
+/* ---- CtaButton ---------------------------------------------------------- */
+.dr-navbar__cta {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  width: auto;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transform: translateY(0) scale(1);
+  box-shadow: 0 1px 2px rgba(20, 22, 20, 0.10);
+  transition: transform var(--dur-base) cubic-bezier(0.34, 1.4, 0.5, 1),
+    box-shadow var(--dur-base) cubic-bezier(0.2, 0, 0.1, 1),
+    background var(--dur-fast);
+}
+
+.dr-navbar__cta--full {
+  width: 100%;
+}
+
+.dr-navbar__cta:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-2px) scale(1.015);
+  box-shadow: 0 10px 22px rgba(46, 151, 62, 0.34), 0 3px 8px rgba(20, 22, 20, 0.12);
+}
+
+.dr-navbar__cta:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 1px 3px rgba(20, 22, 20, 0.18);
+}
+
+.dr-navbar__cta-sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 60%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-160%) skewX(-12deg);
+  transition: transform 620ms cubic-bezier(0.2, 0, 0.1, 1);
+  pointer-events: none;
+}
+
+.dr-navbar__cta:hover .dr-navbar__cta-sheen {
+  transform: translateX(220%) skewX(-12deg);
+}
+
+.dr-navbar__cta-label {
+  position: relative;
+  z-index: 1;
+}
+
+.dr-navbar__cta-arrow {
+  position: relative;
+  z-index: 1;
+  transform: translateX(0);
+  transition: transform var(--dur-base) cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+
+.dr-navbar__cta:hover .dr-navbar__cta-arrow {
+  transform: translateX(3px);
+}
+
+/* ---- Wordmark ----------------------------------------------------------- */
+.dr-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  text-decoration: none;
+  transform: scale(1);
+  transform-origin: left center;
+  transition: transform var(--dur-base) cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+
+.dr-navbar__brand:hover {
+  transform: scale(1.04);
+  text-decoration: none;
+}
+
+.dr-navbar__brand--mobile {
+  gap: 10px;
+}
+
+.dr-navbar__brand-logo {
+  height: 52px;
+  width: auto;
+  display: block;
+}
+
+.dr-navbar__brand--mobile .dr-navbar__brand-logo {
+  height: 40px;
+}
+
+.dr-navbar__brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.dr-navbar__brand-name {
+  font-family: var(--font-logo);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.01em;
+  color: var(--text-strong);
+}
+
+.dr-navbar__brand--mobile .dr-navbar__brand-name {
+  font-size: 16px;
+}
+
+.dr-navbar__brand-accent {
+  color: var(--color-primary);
+}
+
+.dr-navbar__brand-sub {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.dr-navbar__brand--mobile .dr-navbar__brand-sub {
+  font-size: 8.5px;
+}
+
+/* ---- Hamburger toggle --------------------------------------------------- */
+.dr-navbar__toggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-page);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.dr-navbar__bar {
+  display: block;
+  height: 2px;
+  width: 20px;
+  margin: 0 auto;
+  border-radius: 2px;
+  background: var(--text-strong);
+  transform: none;
+  opacity: 1;
+  transition: transform var(--dur-base) cubic-bezier(0.2, 0, 0.1, 1),
+    opacity var(--dur-fast);
+}
+
+.dr-navbar__toggle.is-open .dr-navbar__bar--1 {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.dr-navbar__toggle.is-open .dr-navbar__bar--2 {
+  transform: scaleX(0);
+  opacity: 0;
+}
+
+.dr-navbar__toggle.is-open .dr-navbar__bar--3 {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ---- Mobile dropdown panel ---------------------------------------------- */
+.dr-navbar__menu {
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 49;
+  background: var(--surface-page);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-4) var(--gutter) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transform-origin: top;
+  transform: translateY(-8px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.dr-navbar__menu.is-open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dr-navbar__menu-link {
+  padding: 13px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text-strong);
+  background: transparent;
+  text-decoration: none;
+}
+
+.dr-navbar__menu-link:hover {
+  text-decoration: none;
+}
+
+.dr-navbar__menu-link--active {
+  color: var(--color-primary);
+  background: var(--color-primary-tint);
+}
+
+.dr-navbar__menu-cta {
+  margin-top: 8px;
+}

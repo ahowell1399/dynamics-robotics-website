@@ -19,10 +19,10 @@ const WEB3FORMS_ACCESS_KEY =
   import.meta.env.VITE_WEB3FORMS_KEY || "REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY";
 
 const TIMELINE_OPTS = [
-  { value: "q", label: "This quarter" },
-  { value: "h", label: "Within 6 months" },
-  { value: "y", label: "This year" },
-  { value: "plan", label: "Just planning" },
+  { value: "q", label: "This Quarter" },
+  { value: "h", label: "Within 6 Months" },
+  { value: "y", label: "This Year" },
+  { value: "plan", label: "Just Planning" },
 ];
 
 function MachineThumb({ item }) {
@@ -85,9 +85,9 @@ export default function Contact() {
         <div style={{ width: 64, height: 64, borderRadius: "50%", background: "var(--color-primary-tint)", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5 9-9" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </div>
-        <h1 style={{ fontSize: "var(--text-2xl)", marginBottom: 12 }}>Request received</h1>
+        <h1 style={{ fontSize: "var(--text-2xl)", marginBottom: 12 }}>Request Received</h1>
         <p style={{ fontSize: "var(--text-md)", color: "var(--text-body)", marginBottom: 28 }}>A controls engineer will reach out within one business day to scope your {chosen.length || ""} {chosen.length === 1 ? "cell" : "cells"}.</p>
-        <Button onClick={() => navigate("/")}>Back to home</Button>
+        <Button onClick={() => navigate("/")}>Back To Home</Button>
       </main>
     );
   }
@@ -98,7 +98,7 @@ export default function Contact() {
     <main style={{ padding: "var(--space-8) var(--gutter) var(--space-9)", maxWidth: hasSel ? "var(--container-lg)" : "var(--container-md)", margin: "0 auto" }}>
       <div style={{ textAlign: (hasSel && !isMobile) ? "left" : "center" }}>
         <span className="dr-eyebrow">// {hasSel ? "Your selection" : "Get started"}</span>
-        <h1 style={{ fontSize: "var(--text-2xl)", margin: "12px 0 24px" }}>Request a quote</h1>
+        <h1 style={{ fontSize: "var(--text-2xl)", margin: "12px 0 24px" }}>Request A Quote</h1>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: (hasSel && !isMobile) ? "0.92fr 1.18fr" : "1fr", gap: "var(--space-8)", alignItems: "start" }}>
         {hasSel && (
@@ -120,7 +120,7 @@ export default function Contact() {
                 </div>
               ))}
             </div>
-            <Button variant="secondary" size="sm" onClick={() => navigate("/services")}>+ Add more services</Button>
+            {/* <Button variant="secondary" size="sm" onClick={() => navigate("/services")}>+ Add More Services</Button> */}
           </Card>
         )}
 
@@ -129,26 +129,26 @@ export default function Contact() {
             {/* Honeypot — hidden from users; bots that tick it are rejected by Web3Forms. */}
             <input type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ display: "none" }} />
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--space-4)" }}>
-              <Input label="Full name" name="name" placeholder="Jordan Smith" required />
+              <Input label="Full Name" name="name" placeholder="Jordan Smith" required />
               <Input label="Company" name="company" placeholder="Acme Manufacturing" />
-              <Input label="Work email" name="email" type="email" placeholder="you@company.com" required />
+              <Input label="Work Email" name="email" type="email" placeholder="you@company.com" required />
               <Input label="Phone" name="phone" type="tel" placeholder="(417) 555-0142" />
               <div style={{ gridColumn: "1 / -1" }}>
-                <Select multiple label="Machines & services of interest" options={serviceOpts} value={selected} onChange={setSelected} placeholder="Select machines" />
+                <Select multiple label="Machines & Services Of Interest" options={serviceOpts} value={selected} onChange={setSelected} placeholder="Select Machines" />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
-                <Select label="Primary timeline" placeholder="When do you need it running?" value={service} onChange={setService} options={TIMELINE_OPTS} />
+                <Select label="Primary Timeline" placeholder="When Do You Need It Running?" value={service} onChange={setService} options={TIMELINE_OPTS} />
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
-                <Input label="Tell us about your line" name="message" multiline rows={4} placeholder="Parts, cycle time, current bottleneck…" />
+                <Input label="Tell Us About Your Line" name="message" multiline rows={4} placeholder="Parts, cycle time, current bottleneck…" />
               </div>
               <div style={{ gridColumn: "1 / -1", display: "flex", flexDirection: "column", gap: 14, marginTop: 4 }}>
-                <Checkbox checked={callback} onChange={setCallback} label="I'd like a callback" hint="A controls engineer will reach out within 1 business day." />
+                <Checkbox checked={callback} onChange={setCallback} label="I'd Like A Callback" hint="A controls engineer will reach out within 1 business day." />
                 {error && (
                   <div role="alert" style={{ fontSize: "var(--text-sm)", color: "var(--status-danger)" }}>{error}</div>
                 )}
                 <Button type="submit" size="lg" fullWidth disabled={submitting} iconRight={<ArrowR/>}>
-                  {submitting ? "Sending…" : "Submit request"}
+                  {submitting ? "Sending…" : "Submit Request"}
                 </Button>
               </div>
             </div>
@@ -156,10 +156,12 @@ export default function Contact() {
         </Card>
       </div>
 
-      <section style={{ marginTop: "var(--space-8)" }}>
+      {/* Break the map out to the wider container so it stays roomy even when
+          the form column is narrow (no services selected). */}
+      <section style={{ marginTop: "var(--space-8)", width: "min(var(--container-lg), calc(100vw - 2 * var(--gutter)))", marginLeft: "50%", transform: "translateX(-50%)" }}>
         <div style={{ textAlign: isMobile ? "center" : "left" }}>
           <span className="dr-eyebrow">// Visit us</span>
-          <h2 style={{ fontSize: "var(--text-xl)", margin: "10px 0 10px" }}>Find us in Springfield, MO</h2>
+          <h2 style={{ fontSize: "var(--text-xl)", margin: "10px 0 10px" }}>Find Us In Springfield, MO</h2>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-sm)", color: "var(--text-body)", margin: "0 0 18px", lineHeight: 1.9 }}>
             1630 N Eldon Ave, Springfield, MO 65802<br/>
             <a href="tel:+14177733372" style={{ color: "var(--color-primary)", textDecoration: "none" }}>(417) 773-3372</a>

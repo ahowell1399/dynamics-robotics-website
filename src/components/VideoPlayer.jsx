@@ -1,79 +1,117 @@
 import React from "react";
+import "./VideoPlayer.css";
 
 /**
  * Dynamic Robotics & Integrations — VideoPlayer
- * A muted, looping shop clip that starts playing automatically when it scrolls
- * into view and pauses when it leaves — so a wall of them stays light on CPU
- * and bandwidth. Native `controls` let visitors scrub or unmute, which is the
- * only way to hear sound (browsers block autoplay with audio).
+ * A muted shop clip. By default it lazily autoplays once the visitor scrolls it
+ * into view and pauses when it leaves — so a wall of them stays light on CPU and
+ * bandwidth. Native `controls` let visitors scrub or unmute (the only way to
+ * hear sound, since browsers block autoplay with audio).
  *
- * Accessibility: honors `prefers-reduced-motion` — when motion is reduced we
- * never autoplay; the poster shows and the controls still work on tap.
+ * Playback can also be parent-controlled: pass a boolean `playing` and the clip
+ * plays/pauses to match (used by the auto-advancing Carousel, where only the
+ * centred clip plays). `onEnded` fires when a non-looping clip finishes, and
+ * `loop` (default true) can be turned off so it plays through once.
+ *
+ * Accessibility: honors `prefers-reduced-motion` — when motion is reduced the
+ * uncontrolled path never autoplays; the poster shows and controls still work.
  */
-export function VideoPlayer({ src, poster, title, caption, aspect = "9 / 16", style = {} }) {
+export function VideoPlayer({
+  src,
+  poster,
+  title,
+  caption,
+  aspect = "9 / 16",
+  style = {},
+  playing,
+  loop = true,
+  onEnded,
+}) {
   const videoRef = React.useRef(null);
 
+  // muted is required for autoplay and isn't reliably reflected by React.
   React.useEffect(() => {
     const el = videoRef.current;
-    if (!el) return;
-    // React doesn't reliably reflect the `muted` attribute to the DOM property,
-    // and muted is required for autoplay — so force it imperatively.
-    el.muted = true;
+    if (el) el.muted = true;
+  }, []);
+
+  // Controlled playback: the parent decides via `playing`.
+  React.useEffect(() => {
+    const el = videoRef.current;
+    if (!el || playing === undefined) return;
+    if (playing) el.play().catch(() => {}); // autoplay may be rejected — ignore
+    else el.pause();
+  }, [playing]);
+
+  // Uncontrolled fallback: autoplay only once the visitor has actually scrolled
+  // AND the clip is in view — so a clip already on-screen at page load stays
+  // paused on its poster until the user scrolls down to it.
+  React.useEffect(() => {
+    const el = videoRef.current;
+    if (!el || playing !== undefined) return;
 
     const reduce =
       typeof window !== "undefined" &&
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return; // leave paused on the poster; controls remain usable
+    if (reduce) return;
+
+    let visible = false;
+    let armed = false;
+    const sync = () => {
+      if (armed && visible) el.play().catch(() => {});
+      else if (!el.paused) el.pause();
+    };
 
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          el.play().catch(() => {}); // autoplay may still be rejected — ignore
-        } else if (!el.paused) {
-          el.pause();
-        }
+        visible = entry.isIntersecting;
+        sync();
       },
       { threshold: 0.5 }
     );
     io.observe(el);
-    return () => io.disconnect();
-  }, []);
+
+    const onScroll = () => {
+      armed = true;
+      sync();
+      window.removeEventListener("scroll", onScroll);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [playing]);
 
   return (
-    <figure style={{ margin: 0, ...style }}>
-      <div
-        style={{
-          position: "relative",
-          aspectRatio: aspect,
-          borderRadius: "var(--radius-lg)",
-          overflow: "hidden",
-          background: "#0b0e0c",
-          border: "1px solid var(--border-subtle)",
-          boxShadow: "var(--shadow-sm)",
-        }}
-      >
+    <figure className="dr-video" style={{ "--dr-video-aspect": aspect, ...style }}>
+      <div className="dr-video__frame">
         <video
           ref={videoRef}
           src={src}
           poster={poster}
           muted
-          loop
+          loop={loop}
           playsInline
           controls
+          // Strip the download item from the native controls menu, and block the
+          // right-click "Save video as…" path — visitors can watch but not pull
+          // the source file.
+          controlsList="nodownload"
+          onContextMenu={(e) => e.preventDefault()}
+          disablePictureInPicture
           preload="metadata"
           aria-label={title}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          onEnded={onEnded}
+          className="dr-video__media"
         />
       </div>
       {(title || caption) && (
-        <figcaption style={{ padding: "10px 2px 0" }}>
-          {title && (
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--text-strong)", lineHeight: 1.25 }}>{title}</div>
-          )}
-          {caption && (
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: "var(--text-2xs)", letterSpacing: "0.04em", color: "var(--text-muted)", marginTop: 3 }}>{caption}</div>
-          )}
+        <figcaption className="dr-video__caption">
+          {title && <div className="dr-video__title">{title}</div>}
+          {caption && <div className="dr-video__sub">{caption}</div>}
         </figcaption>
       )}
     </figure>

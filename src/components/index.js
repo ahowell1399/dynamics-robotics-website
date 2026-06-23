@@ -9,3 +9,6 @@ export { Footer } from "./Footer.jsx";
 export { Gallery } from "./Gallery.jsx";
 export { LocationMap } from "./LocationMap.jsx";
 export { VideoPlayer } from "./VideoPlayer.jsx";
+export { Carousel } from "./Carousel.jsx";
+export { Reveal } from "./Reveal.jsx";
+export { Lightbox } from "./Lightbox.jsx";

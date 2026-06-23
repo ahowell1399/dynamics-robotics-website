@@ -1,0 +1,205 @@
+/* Dynamic Robotics & Integrations — Carousel
+   Horizontal scroll-snap track with peeking cards, edge fades, auto-disabling
+   prev/next arrows, and a scroll-progress bar. tone="dark" adds the cinematic
+   spotlight (centre card lifted, neighbours dimmed) for the video reel. */
+
+.dr-carousel {
+  position: relative;
+}
+
+.dr-carousel__viewport {
+  position: relative;
+}
+
+/* The scrollable track. Cards lay out in a row and snap into place; the
+   scrollbar is hidden since the arrows + peek communicate scrollability. The
+   vertical padding leaves room for the spotlight glow so it isn't clipped. */
+.dr-carousel__track {
+  display: flex;
+  gap: var(--space-5);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* legacy Edge */
+  /* Vertical room for the spotlight glow; inline padding (set from JS) lets
+     the first/last card reach the centre. */
+  padding-block: 30px;
+  padding-inline: var(--dr-carousel-pad, 4px);
+}
+
+.dr-carousel__track::-webkit-scrollbar {
+  display: none;                  /* Chrome / Safari */
+}
+
+.dr-carousel__item {
+  flex: 0 0 auto;
+  width: clamp(220px, 70vw, 290px);
+  scroll-snap-align: center;
+}
+
+/* ---- Edge fades (coloured to match the surrounding surface) ------------- */
+.dr-carousel__fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.dr-carousel__fade--left {
+  left: 0;
+  background: linear-gradient(to right, var(--dr-carousel-fade, var(--surface-page)), transparent);
+}
+
+.dr-carousel__fade--right {
+  right: 0;
+  background: linear-gradient(to left, var(--dr-carousel-fade, var(--surface-page)), transparent);
+}
+
+.dr-carousel__fade.is-hidden {
+  opacity: 0;
+}
+
+/* ---- Prev / next arrows ------------------------------------------------- */
+.dr-carousel__arrow {
+  position: absolute;
+  top: 42%;
+  transform: translateY(-50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  background: var(--surface-page);
+  color: var(--text-strong);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  opacity: 1;
+  transition: background var(--dur-fast), color var(--dur-fast),
+    border-color var(--dur-fast), opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-fast);
+}
+
+.dr-carousel__arrow--prev {
+  left: -6px;
+}
+
+.dr-carousel__arrow--next {
+  right: -6px;
+}
+
+.dr-carousel__arrow:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.dr-carousel__arrow:active:not(:disabled) {
+  transform: translateY(-50%) scale(0.94);
+}
+
+/* At an end: fade the arrow out and take it out of the tab/click flow. */
+.dr-carousel__arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Scroll-progress bar ------------------------------------------------ */
+.dr-carousel__progress {
+  width: 160px;
+  height: 3px;
+  margin: var(--space-5) auto 0;
+  border-radius: 2px;
+  background: var(--border-subtle);
+  overflow: hidden;
+}
+
+.dr-carousel__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--color-primary);
+  transition: width 90ms linear;
+}
+
+/* Touch viewports: swipe is the natural control, so drop the arrows. */
+@media (max-width: 819.98px) {
+  .dr-carousel__arrow {
+    display: none;
+  }
+}
+
+/* ===== Cinematic dark tone =============================================== */
+.dr-carousel--dark {
+  --dr-carousel-fade: var(--surface-ink);
+}
+
+/* Spotlight: neighbours recede + dim, the centred card sits at full size. */
+.dr-carousel--dark .dr-carousel__item {
+  transform: scale(0.9);
+  opacity: 0.5;
+  transition: transform var(--dur-slow) var(--ease-out),
+    opacity var(--dur-slow) var(--ease-out);
+}
+
+.dr-carousel--dark .dr-carousel__item.is-active {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Glassy arrows on dark */
+.dr-carousel--dark .dr-carousel__arrow {
+  background: rgba(18, 20, 18, 0.55);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.dr-carousel--dark .dr-carousel__arrow:hover:not(:disabled) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.dr-carousel--dark .dr-carousel__progress {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* These reach into the VideoPlayer children: the dark tone is purpose-built
+   for the video reel, so soften the frame, light up the captions, and give the
+   active clip a green glow. */
+.dr-carousel--dark .dr-video__frame {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.dr-carousel--dark .dr-video__title {
+  color: #fff;
+}
+
+.dr-carousel--dark .dr-video__sub {
+  color: var(--neutral-400);
+}
+
+.dr-carousel--dark .dr-carousel__item.is-active .dr-video__frame {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 24px 60px rgba(46, 151, 62, 0.30), 0 12px 30px rgba(0, 0, 0, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dr-carousel__track {
+    scroll-behavior: auto;
+  }
+  .dr-carousel__item,
+  .dr-carousel__progress-fill,
+  .dr-carousel__fade {
+    transition: none;
+  }
+}

@@ -1,0 +1,116 @@
+.dr-locmap {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-md);
+}
+
+.dr-locmap__canvas {
+  height: 440px;
+  width: 100%;
+  background: #0b0e0c;
+}
+
+@media (max-width: 819.98px) {
+  .dr-locmap__canvas {
+    height: 320px;
+  }
+}
+
+/* glass info card — z-index above Leaflet's panes (which go up to ~700) */
+.dr-locmap__card {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1001;
+  max-width: 264px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: rgba(18, 20, 18, 0.74);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-lg);
+  color: #fff;
+}
+
+.dr-locmap__card-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 6px;
+}
+
+.dr-locmap__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(46, 151, 62, 0.25);
+  flex-shrink: 0;
+}
+
+.dr-locmap__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.dr-locmap__addr {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--green-400);
+  margin-bottom: 14px;
+}
+
+/* recenter control */
+.dr-locmap__recenter {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1001;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(18, 20, 18, 0.8);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+/* touch veil — tap to enable panning without trapping page scroll */
+.dr-locmap__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 18px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dr-locmap__veil-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(18, 20, 18, 0.78);
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}

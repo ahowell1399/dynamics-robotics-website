@@ -1,0 +1,125 @@
+.dr-footer {
+  background: var(--surface-ink);
+  color: var(--neutral-300);
+  font-family: var(--font-body);
+  padding: var(--space-9) var(--gutter) var(--space-6);
+}
+
+.dr-footer__inner {
+  max-width: var(--container-xl);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr);
+  gap: var(--space-7);
+}
+
+.dr-footer__brand-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 16px;
+}
+
+.dr-footer__logo {
+  width: 46px;
+  height: 46px;
+}
+
+.dr-footer__name {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.dr-footer__name-main {
+  font-family: var(--font-logo);
+  font-weight: 700;
+  font-size: 17px;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.dr-footer__sub {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green-400);
+  margin-top: 3px;
+}
+
+.dr-footer__tagline {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--neutral-400);
+  max-width: 280px;
+  margin: 0 0 18px;
+}
+
+.dr-footer__contact {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 2;
+  color: var(--neutral-400);
+}
+
+.dr-footer__contact-email {
+  color: var(--green-400);
+}
+
+.dr-footer__col-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green-400);
+  margin-bottom: 16px;
+}
+
+.dr-footer__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dr-footer__link {
+  font-size: var(--text-sm);
+  color: var(--neutral-300);
+  text-decoration: none;
+  transition: color var(--dur-fast);
+}
+
+.dr-footer__link:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.dr-footer__bottom {
+  max-width: var(--container-xl);
+  margin: var(--space-7) auto 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--neutral-800);
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--neutral-500);
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 819.98px) {
+  .dr-footer__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+
+  .dr-footer__bottom {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
