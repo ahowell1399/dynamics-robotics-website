@@ -5,14 +5,12 @@ import path from "node:path";
 
 // GitHub Pages PROJECT page: served from
 // https://austin-s-howell.github.io/dynamic-robotics-website/
-// Build under that sub-path; keep the dev server at root for convenience.
-// Override with VITE_BASE (e.g. set VITE_BASE=/ when using a custom domain).
-const PROJECT_BASE = "/dynamic-robotics-website/";
+// For custom domains served at the root, build with a root base path.
+// Use VITE_BASE=/dynamic-robotics-website/ only when deploying to the repo path.
 
 // Copy the built index.html to 404.html. GitHub Pages serves 404.html (with the
-// original URL preserved) for any unknown path, so client-side deep links such
-// as /dynamic-robotics-website/services resolve to the SPA shell and React
-// Router (with its basename) renders the correct route on a hard refresh.
+// original URL preserved) for any unknown path, so client-side deep links can
+// resolve to the SPA shell and React Router (with its basename) on hard refresh.
 function spaFallback() {
   let outDir = "dist";
   return {
@@ -31,6 +29,6 @@ function spaFallback() {
 }
 
 export default defineConfig(({ command }) => ({
-  base: process.env.VITE_BASE || (command === "build" ? PROJECT_BASE : "/"),
+  base: process.env.VITE_BASE || "/",
   plugins: [react(), spaFallback()],
 }));
