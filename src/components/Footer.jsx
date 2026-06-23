@@ -13,7 +13,7 @@ export function Footer({
   ],
   logoSrc = "assets/logo-emblem.png",
   tagline = "Robotic integration engineered for your floor.",
-  contact = { phone: "(417) 773-3372", email: "jimmy.holiday@dynamicrobotics.com", location: "1630 N Eldon Ave, Springfield, MO 65802" },
+  contact = { phone: "(417) 773-3372", email: "jimmy.holaday@dynamicrobotics.com", location: "1630 N Eldon Ave, Springfield, MO 65802" },
   style = {},
 }) {
   const isMobile = useIsMobile();

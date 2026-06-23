@@ -164,7 +164,7 @@ export default function Contact() {
             1630 N Eldon Ave, Springfield, MO 65802<br/>
             <a href="tel:+14177733372" style={{ color: "var(--color-primary)", textDecoration: "none" }}>(417) 773-3372</a>
             {"  ·  "}
-            <a href="mailto:jimmy.holiday@dynamicrobotics.com" style={{ color: "var(--color-primary)", textDecoration: "none" }}>jimmy.holiday@dynamicrobotics.com</a>
+            <a href="mailto:jimmy.holaday@dynamicrobotics.com" style={{ color: "var(--color-primary)", textDecoration: "none" }}>jimmy.holaday@dynamicrobotics.com</a>
           </p>
         </div>
         <LocationMap
